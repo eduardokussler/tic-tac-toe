@@ -1,0 +1,17 @@
+body {
+  width: 90vw;
+  height: 40vw;
+  display: flex;
+  align-items: center;
+  justify-items: center;
+  justify-content: space-evenly;
+  
+}
+
+td {
+  border: 1px black solid;
+  width: 30px;
+  height: 30px;
+  font-size: 30px;
+  padding-left: 20px;
+}
