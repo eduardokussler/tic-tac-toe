@@ -6,9 +6,31 @@ function make2dArray(columns, rows ) {
   return arr;
 }
 
-let gameBoard = (() => {
-  let gameState = make2dArray(3, 3);
-  let currentPlayer = 'X';
+
+
+function createPlayer() {
+  let Player = {
+    name: '',
+    piece: '',
+    init: function(playerName, pieces) {
+      this.name = playerName;
+      this.piece = pieces;
+      return this;
+    }
+  }
+  let playerName = prompt('Player Name: ');
+  let playerPieces = prompt('With which piece will you play with? ');
+  let newPlayer = Object.create(Player).init(playerName, playerPieces);
+  return newPlayer;
+}
+
+
+
+
+let game = (() => {
+  let gameBoard = make2dArray(3, 3);
+  let players = [];
+  let currentPlayer = 0;
   
   function _checkBoard(currentTestPlayer) {
     let result = {
@@ -16,10 +38,10 @@ let gameBoard = (() => {
       outcome: ''
     }
     // testing if player won by completing columns
-    for(let i = 0; i < gameState.length; i++) { 
+    for(let i = 0; i < gameBoard.length; i++) { 
       let positions = 0;
-      for(let j = 0; j < gameState[0].length; j++) {
-        if(gameState[i][j] === currentTestPlayer) {
+      for(let j = 0; j < gameBoard[0].length; j++) {
+        if(gameBoard[i][j] === currentTestPlayer) {
           positions++;
         }
       }
@@ -30,10 +52,10 @@ let gameBoard = (() => {
       }
     }
     // testing if player won by completing rows
-    for(let i = 0; i < gameState.length; i++) { 
+    for(let i = 0; i < gameBoard.length; i++) { 
       let positions = 0;
-      for(let j = 0; j < gameState[0].length; j++) {
-        if(gameState[j][i] === currentTestPlayer) {
+      for(let j = 0; j < gameBoard[0].length; j++) {
+        if(gameBoard[j][i] === currentTestPlayer) {
           positions++;
         }
       }
@@ -45,8 +67,8 @@ let gameBoard = (() => {
     }
     // testing if player won by completing diagonals
     let positions = 0;
-    for(let i = 0; i < gameState.length; i++) {
-      if(gameState[i][i] === currentTestPlayer) {
+    for(let i = 0; i < gameBoard.length; i++) {
+      if(gameBoard[i][i] === currentTestPlayer) {
         positions++;
       }
     }
@@ -57,8 +79,8 @@ let gameBoard = (() => {
     }
     
     positions = 0;
-    for(let i = 0; i < gameState.length; i++) {
-      if(gameState[gameState.length-1-i][i] === currentTestPlayer) {
+    for(let i = 0; i < gameBoard.length; i++) {
+      if(gameBoard[gameBoard.length-1-i][i] === currentTestPlayer) {
         positions++;
       }
     }
@@ -69,9 +91,9 @@ let gameBoard = (() => {
     }
     // test if board is full
     positions = 0;
-    for(let i = 0; i < gameState.length; i++) {
-      for(let j = 0; j < gameState[0].lenght; j++) {
-        if(gameState[i][j] !== '') {
+    for(let i = 0; i < gameBoard.length; i++) {
+      for(let j = 0; j < gameBoard[0].lenght; j++) {
+        if(gameBoard[i][j] !== '') {
           positions++
         }
       }
@@ -90,13 +112,13 @@ let gameBoard = (() => {
     if(target.innerText === '') {
       let row = target.getAttribute('data-index-row');
       let col = target.getAttribute('data-index-col');
-      gameState[col][row] = currentPlayer;
-      target.innerText = currentPlayer;
-      let result = _checkBoard(currentPlayer);
+      gameBoard[col][row] = players[currentPlayer].piece;
+      target.innerText = players[currentPlayer].piece;
+      let result = _checkBoard(players[currentPlayer].piece);
       if(result.status === 'finished') {
-        _endGame(result, currentPlayer);
+        _endGame(result, players[currentPlayer]);
       }
-      currentPlayer = (currentPlayer === 'X' ? 'O' : 'X')
+      currentPlayer = (currentPlayer === 0 ? 1 : 0)
     } else {
       alert('INVALID MOVE, TRY OTHER POSITION');
     }
@@ -110,14 +132,66 @@ let gameBoard = (() => {
     if(result.outcome === 'tie') {
       alert('GAME ENDED IN A TIE');
     } else {
-      alert(`GAME ENDED! ${currentPlayer} PLAYER WON!`)
+      alert(`GAME ENDED! ${currentPlayer.name} WON!`);
+      let winnerDiv = document.querySelector('.winner');
+      winnerDiv.innerText = `The WINNER is: ${currentPlayer.name}`;
     }
   }
-  function initGame() {
+  function _cleanTable() {
+    let table = document.querySelector('table');
+    while(table.lastChild) {
+      table.lastChild.remove();
+    }
+  };
+
+  function _cleanDivs(){
+    let player1Div = document.querySelector('#player1');
+    let player2Div = document.querySelector('#player2');
+    player1Div.innerText = '';
+    player2Div.innerText = '';
+  }
+  function _resetGame(){
+    _cleanTable();
+    _cleanDivs();
+    _removeButtons();
+    players.splice(0,2);
+    console.log(players);
+  }
+
+  function _setButtons() {
+    let restartButton = document.createElement('button');
+    restartButton.innerText = 'Restart';
+    restartButton.addEventListener('click', () => {
+      _cleanTable();
+      _initGame();
+    });
+    let controlDiv = document.querySelector('.controls');
+    controlDiv.appendChild(restartButton);
+
+    let resetButton = document.createElement('button');
+    resetButton.innerText = 'Reset';
+    resetButton.addEventListener('click', () => {
+      _resetGame();
+      init();
+    });
+    controlDiv.appendChild(resetButton);
+  }
+
+  function _removeButtons() {
+    let controlDiv = document.querySelector('.controls');
+    while(controlDiv.lastChild) {
+      controlDiv.lastChild.remove();
+    }
+  }
+
+  function _initGame() {
     let grid = document.querySelector('table');
-    for(let j = 0; j < gameState.length; j++) {
+    let colgroup = document.createElement('colgroup');
+    colgroup.setAttribute('span', 3);
+    grid.appendChild(colgroup);
+    for(let j = 0; j < gameBoard.length; j++) {
       let newRow = document.createElement('tr');
-      for(let i = 0; i < gameState[0].length; i++) {
+      for(let i = 0; i < gameBoard[0].length; i++) {
         let newCell = newRow.insertCell();
         newCell.setAttribute('data-index-col', j);
         newCell.setAttribute('data-index-row', i);
@@ -126,10 +200,23 @@ let gameBoard = (() => {
       grid.appendChild(newRow);
     }
   };
+
+  function init() {
+    players.push(createPlayer());
+    players.push(createPlayer());
+    let player1Div = document.querySelector('#player1');
+    let player2Div = document.querySelector('#player2');
+    player1Div.innerText = `${players[0].name}
+    Marker: ${players[0].piece}`;
+    player2Div.innerText = `${players[1].name}
+    Marker: ${players[1].piece}`;
+    _initGame();
+    _setButtons();
+
+  }
   return {
-    initGame,
-    gameState,
+    init,
   }
 })();
+game.init();
 
-gameBoard.initGame();
