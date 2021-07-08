@@ -11,16 +11,16 @@ function make2dArray(columns, rows ) {
 function createPlayer() {
   let Player = {
     name: '',
-    piece: '',
-    init: function(playerName, pieces) {
+    marker: '',
+    init: function(playerName, playerMarker) {
       this.name = playerName;
-      this.piece = pieces;
+      this.marker = playerMarker;
       return this;
     }
   }
   let playerName = prompt('Player Name: ');
-  let playerPieces = prompt('With which piece will you play with? ');
-  let newPlayer = Object.create(Player).init(playerName, playerPieces);
+  let playerMarker = prompt('With which marker will you play with? ');
+  let newPlayer = Object.create(Player).init(playerName, playerMarker);
   return newPlayer;
 }
 
@@ -36,7 +36,7 @@ let game = (() => {
     let result = {
       status: 'resume',
       outcome: ''
-    }
+    };
     // testing if player won by completing columns
     for(let i = 0; i < gameBoard.length; i++) { 
       let positions = 0;
@@ -92,9 +92,9 @@ let game = (() => {
     // test if board is full
     positions = 0;
     for(let i = 0; i < gameBoard.length; i++) {
-      for(let j = 0; j < gameBoard[0].lenght; j++) {
-        if(gameBoard[i][j] !== '') {
-          positions++
+      for(let j = 0; j < gameBoard[0].length; j++) {
+        if(gameBoard[i][j] === players[0].marker || gameBoard[i][j] === players[1].marker) {
+          positions++;
         }
       }
     }
@@ -112,9 +112,9 @@ let game = (() => {
     if(target.innerText === '') {
       let row = target.getAttribute('data-index-row');
       let col = target.getAttribute('data-index-col');
-      gameBoard[col][row] = players[currentPlayer].piece;
-      target.innerText = players[currentPlayer].piece;
-      let result = _checkBoard(players[currentPlayer].piece);
+      gameBoard[col][row] = players[currentPlayer].marker;
+      target.innerText = players[currentPlayer].marker;
+      let result = _checkBoard(players[currentPlayer].marker);
       if(result.status === 'finished') {
         _endGame(result, players[currentPlayer]);
       }
@@ -123,6 +123,7 @@ let game = (() => {
       alert('INVALID MOVE, TRY OTHER POSITION');
     }
   };
+
 
   function _endGame(result, currentPlayer) {
     let cells = document.querySelectorAll('td');
@@ -137,6 +138,21 @@ let game = (() => {
       winnerDiv.innerText = `The WINNER is: ${currentPlayer.name}`;
     }
   }
+
+  
+  function _cleanGameBoard() {
+    for(let i = 0; i < gameBoard.length; i++) {
+      for(let j = 0; j < gameBoard[0].length; j++) {
+        gameBoard[i][j] = '';
+      }
+    }
+  }
+
+  function _cleanWinnerDiv() {
+    let winnerDiv = document.querySelector('#winner');
+    winnerDiv.innerText = '';
+  }
+
   function _cleanTable() {
     let table = document.querySelector('table');
     while(table.lastChild) {
@@ -155,7 +171,8 @@ let game = (() => {
     _cleanDivs();
     _removeButtons();
     players.splice(0,2);
-    console.log(players);
+    _cleanWinnerDiv();
+    _cleanGameBoard();
   }
 
   function _setButtons() {
@@ -163,6 +180,8 @@ let game = (() => {
     restartButton.innerText = 'Restart';
     restartButton.addEventListener('click', () => {
       _cleanTable();
+      _cleanGameBoard();
+      _cleanWinnerDiv();
       _initGame();
     });
     let controlDiv = document.querySelector('.controls');
@@ -207,9 +226,9 @@ let game = (() => {
     let player1Div = document.querySelector('#player1');
     let player2Div = document.querySelector('#player2');
     player1Div.innerText = `${players[0].name}
-    Marker: ${players[0].piece}`;
+    Marker: ${players[0].marker}`;
     player2Div.innerText = `${players[1].name}
-    Marker: ${players[1].piece}`;
+    Marker: ${players[1].marker}`;
     _initGame();
     _setButtons();
 
